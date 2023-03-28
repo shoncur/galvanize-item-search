@@ -3,41 +3,12 @@ import docx
 import re
 from tkinter import filedialog
 from PyQt5 import QtGui
-from PyQt5.QtCore import QSize, Qt, pyqtSlot
-from PyQt5.QtGui import QIcon, QPixmap
-from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QPushButton, QDesktopWidget, QLabel
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
 import sys
 
-# allows the user to choose a file
-def UploadFile(event=None):
-    filename = filedialog.askopenfilename()
-    # try for pdf
-    try:
-        reader = PyPDF2.PdfReader(filename)
-        pages = len(reader.pages)
-        pdfText = ""
-        for i in range(pages):
-            pdfText += reader.pages[i].extract_text()
-        pdfText = pdfText.replace(" ", "")
-    except:
-        # try for docx NOT WORKING CURRENTLY
-        try:
-            doc = docx.Document(filename)
-            fullText = []
-            for para in doc.paragraphs:
-                fullText.append(para.text)
-            docText = '\n'.join(fullText)
-            docText = docText.replace(" ", "")
-        except:
-            print('invalid file')
-        else:
-            print(docText)
-            print('-----------------')
-            FindItems(docText)
-    else:
-        print(pdfText)
-        print('-----------------')
-        FindItems(pdfText)
+listofitems = []
 
 # find all instances of an item in the document provided
 def FindItems(text):
@@ -47,9 +18,9 @@ def FindItems(text):
     except:
         print('can not find valid item #\'s')
     else:
-        print(listofitems)
+        return(listofitems)
 
-class App(QMainWindow):
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.title = ('Item Search')
@@ -83,7 +54,7 @@ class App(QMainWindow):
         browseButton = QPushButton('Browse', self)
         browseButton.setToolTip('Choose a file')
         browseButton.move(200, 320)
-        browseButton.clicked.connect(self.on_click)
+        browseButton.clicked.connect(self.uploadFile)
 
         self.center()
         self.show()
@@ -94,11 +65,57 @@ class App(QMainWindow):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
+    def listWindow(self):
+        # itemList = QListWidget()
+        # itemIndex = 0
+        # for item in listofitems:
+        #     itemList.insertItem(itemIndex, listofitems[itemIndex])
+        #     itemIndex+=1
+        self.win = ListWindow()
+        self.win.show()
+
     @pyqtSlot()
-    def on_click(self):
-        UploadFile()
+    def uploadFile(self):
+        filename = filedialog.askopenfilename()
+        # try for pdf
+        try:
+            reader = PyPDF2.PdfReader(filename)
+            pages = len(reader.pages)
+            pdfText = ""
+            for i in range(pages):
+                pdfText += reader.pages[i].extract_text()
+            pdfText = pdfText.replace(" ", "")
+        except:
+            # try for docx NOT WORKING CURRENTLY
+            try:
+                doc = docx.Document(filename)
+                fullText = []
+                for para in doc.paragraphs:
+                    fullText.append(para.text)
+                docText = '\n'.join(fullText)
+                docText = docText.replace(" ", "")
+            except:
+                print('invalid file')
+            else:
+                print(docText)
+                print('-----------------')
+                FindItems(docText)
+        else:
+            print(pdfText)
+            print('-----------------')
+            FindItems(pdfText)
+            self.listWindow()
+
+class ListWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout()
+        self.label = QLabel("Items")
+        layout.addWidget(self.label)
+        self.setLayout(layout)
+        
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = App()
+    ex = MainWindow()
     sys.exit(app.exec_())

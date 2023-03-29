@@ -18,12 +18,13 @@ def FindItems(text):
     except:
         print('can not find valid item #\'s')
     else:
+        print(listofitems)
         return(listofitems)
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.title = ('Item Search')
+        self.title = ('Welcome!')
         self.left = 10
         self.top = 10
         self.width = 400
@@ -65,15 +66,6 @@ class MainWindow(QMainWindow):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
-    def listWindow(self):
-        # itemList = QListWidget()
-        # itemIndex = 0
-        # for item in listofitems:
-        #     itemList.insertItem(itemIndex, listofitems[itemIndex])
-        #     itemIndex+=1
-        self.win = ListWindow()
-        self.win.show()
-
     @pyqtSlot()
     def uploadFile(self):
         filename = filedialog.askopenfilename()
@@ -104,16 +96,40 @@ class MainWindow(QMainWindow):
             print(pdfText)
             print('-----------------')
             FindItems(pdfText)
-            self.listWindow()
+            self.win = ListWindow()
 
 class ListWindow(QWidget):
     def __init__(self):
         super().__init__()
-        layout = QVBoxLayout()
-        self.label = QLabel("Items")
-        layout.addWidget(self.label)
-        self.setLayout(layout)
-        
+        self.title = ('Item List')
+        self.left = 10
+        self.top = 10
+        self.width = 400
+        self.height = 300
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle(self.title)
+        self.setGeometry(self.left, self.top, self.width, self.height)
+        vbox = QVBoxLayout()
+        itemIndex = 0
+        self.itemList = QListWidget()
+        print(listofitems)
+        self.itemList.insertItem(0, "test")
+        for item in listofitems:
+            self.itemList.insertItem(item, listofitems[item])
+            itemIndex+=1
+            print(listofitems[item])
+        vbox.addWidget(self.itemList)
+        self.setLayout(vbox)
+        self.center()
+        self.show()
+
+    def center(self):
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -1,10 +1,10 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog, QListWidget, QRadioButton, QMessageBox
 import fitz
 import re
-from collections import OrderedDict
-from PyQt5.QtGui import QPixmap, QIcon
 import os
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog, QListWidget, QRadioButton, QMessageBox
+from PyQt5.QtGui import QPixmap, QIcon
+from collections import OrderedDict
 
 class PDFReader(QWidget):
     def __init__(self):

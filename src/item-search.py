@@ -2,7 +2,7 @@ import sys
 import fitz
 import re
 import os
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog, QListWidget, QRadioButton, QMessageBox
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog, QListWidget, QRadioButton, QMessageBox, QDialog
 from PyQt5.QtGui import QPixmap, QIcon
 from collections import OrderedDict
 
@@ -29,6 +29,8 @@ class PDFReader(QWidget):
         self.show_page_numbers_radio = QRadioButton('Yes', self)
         self.show_page_numbers_radio.setChecked(True)
         self.show_page_numbers_radio.toggled.connect(self.toggle_page_numbers)
+        self.supported_numbers_button = QPushButton('Show Supported Item Numbers', self)
+        self.supported_numbers_button.clicked.connect(self.supported_numbers_window)
         self.download_button = QPushButton('Download', self)
         self.download_button.clicked.connect(self.download_matches)
         self.download_button.setEnabled(False)
@@ -39,6 +41,7 @@ class PDFReader(QWidget):
         layout.addWidget(self.label)
         layout.addWidget(self.page_number_label)
         layout.addWidget(self.show_page_numbers_radio)
+        layout.addWidget(self.supported_numbers_button)
         layout.addWidget(self.list_widget)
         layout.addWidget(self.download_button)
 
@@ -63,6 +66,27 @@ class PDFReader(QWidget):
         # List of regex patterns for various number formats
         patterns = [
             r'\b[A-Z0-9]{3}-[A-Z0-9]{5}-[A-Z0-9]{3}\b',
+            r'\b[A-Z0-9]{3}-[A-Z0-9]{5}-[A-Z0-9]{2}\b',
+            r'\b[A-Z0-9]{3}-[A-Z0-9]{5}\b(?!-)',
+            r'\b(?<!-)\d{2}-\d{5}\b',
+            r'\bECO-\d{2}-\d{5}\b',
+            r'\bACM-\d{5}-\d{2}\b',
+            r'\bACM-\d{5}\b(?!-)',
+            r'\bCER-\d{5}-\d{2}\b',
+            r'\bCER-\d{5}\b(?!-)',
+            r'\bCEP-\d{5}-\d{2}\b',
+            r'\bCEP-\d{5}\b(?!-)',
+            r'\bCSP-\d{5}-\d{2}\b',
+            r'\bCSP-\d{5}\b(?!-)',
+            r'\bCSR-\d{5}-\d{2}\b',
+            r'\bCSR-\d{5}\b(?!-)',
+            r'\bCLN-\d{5}-\d{2}\b',
+            r'\bCLN-\d{5}\b(?!-)',
+            r'\bDDP-\d{5}\b',
+            r'\bDCD-\d{5}-\d{2}\b',
+            r'\bDCD-\d{5}\b(?!-)',
+            r'\bDHF-\d{5}-[A-Z0-9]{2}\b',
+            r'\bDHF-\d{5}\b(?!-)',
             r'\bFAB-\d{5}-\d{3}-\d{3}\b',
             r'\bBRD-\d{5}-\d{3}-\d{3}\b',
             r'\bGTI-\d{5}-\d{2}\b',
@@ -88,17 +112,71 @@ class PDFReader(QWidget):
         if matches:
             if self.show_page_numbers_radio.isChecked():
                 for match, pattern, page_num in matches:
-                    item = f'Match: {match} | Page: {page_num}'
+                    item = f'Page: {page_num} | {match}'
                     self.list_widget.addItem(item)
             else:
                 unique_matches = list(OrderedDict.fromkeys([match for match, _, _ in matches]))
                 for match in unique_matches:
-                    self.list_widget.addItem(f'Match: {match}')
+                    self.list_widget.addItem(f'{match}')
             self.download_button.setEnabled(True)
         else:
             self.list_widget.addItem('Nothing found')
             self.download_button.setEnabled(False)
 
+    def supported_numbers_window(self):
+        # Create a new window
+        window = QDialog(self)
+        window.setWindowTitle('Supported Item Numbers')
+        self.supported_list_widget = QListWidget(self)
+
+        # List all supported item numbers - refer to regex in extract_numbers()
+        supported_item_numbers = [
+            'XXX-XXXXX-XXX',
+            'XXX-XXXXX-XX',
+            'XXX-XXXXX',
+            'XX-XXXXX',
+            'ACM-XXXXX-XX',
+            'ACM-XXXXX',
+            'CER-XXXXX-XX',
+            'CER-XXXXX',
+            'CEP-XXXXX-XX',
+            'CEP-XXXXX',
+            'CSP-XXXXX-XX',
+            'CSP-XXXXX',
+            'CSR-XXXXX-XX',
+            'CSR-XXXXX',
+            'CLN-XXXXX-XX',
+            'CLN-XXXXX',
+            'DDP-XXXXX',
+            'DCD-XXXXX-XX',
+            'DCD-XXXXX',
+            'DHF-XXXXX-XX',
+            'DHF-XXXXX',
+            'ECO-XX-XXXXX',
+            'FAB-XXXXX-XXX-XXX',
+            'BRD-XXXXX-XXX-XXX',
+            'GTI-XXXXX-XX',
+            'EQP-XXXXX',
+            'PRT-XXXXX-XXX-XXX',
+            'PRT-XXXXX-XXX',
+            'LBL-XXXXX-XXX',
+            'OTS-XXXXX-XXX',
+            'SCH-XXXXX-XXX-XXX',
+            'SW-XXXXX-XXX-XXX',
+            'TFX-XXXXX-XXX-XXX',
+        ]
+        for item in supported_item_numbers:
+            item = f'{item}'
+            self.supported_list_widget.addItem(item)
+
+        label = QLabel('These are the item number formats that will be searched for: ', window)
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(self.supported_list_widget)
+
+        window.setLayout(layout)
+
+        window.exec_()
 
     def toggle_page_numbers(self):
         if self.label.text() != 'No PDF file selected':

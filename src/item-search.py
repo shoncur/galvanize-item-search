@@ -3,7 +3,8 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLa
 import fitz
 import re
 from collections import OrderedDict
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QIcon
+import os
 
 class PDFReader(QWidget):
     def __init__(self):
@@ -12,13 +13,12 @@ class PDFReader(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle('PDF Reader')
-
-        # Create logo
-        self.logo_label = QLabel(self)
-        pixmap = QPixmap('galvanize_logo.png')
-        self.logo_label.setPixmap(pixmap)
-        self.logo_label.setScaledContents(True)
+        self.setWindowTitle('Galvanize Item Search')
+        # Get absolute path of the script
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        # Construct absolute file path to the image file
+        image_path = os.path.join(script_dir, 'resources', 'galvanize_logo.png')
+        self.setWindowIcon(QIcon(image_path))
 
         # Create widgets
         self.browse_button = QPushButton('Browse', self)
@@ -35,7 +35,6 @@ class PDFReader(QWidget):
 
         # Set up layout
         layout = QVBoxLayout()
-        layout.addWidget(self.logo_label)
         layout.addWidget(self.browse_button)
         layout.addWidget(self.label)
         layout.addWidget(self.page_number_label)
@@ -61,32 +60,45 @@ class PDFReader(QWidget):
         # Open PDF and extract text
         pdf_document = fitz.open(file_name)
 
-        # Search for numbers/letters in XXX-XXXXX-XXX format and store the page number
-        pattern = r'\b[A-Z0-9]{3}-[A-Z0-9]{5}-[A-Z0-9]{3}\b'
+        # List of regex patterns for various number formats
+        patterns = [
+            r'\b[A-Z0-9]{3}-[A-Z0-9]{5}-[A-Z0-9]{3}\b',
+            r'\bFAB-\d{5}-\d{3}-\d{3}\b',
+            r'\bBRD-\d{5}-\d{3}-\d{3}\b',
+            r'\bGTI-\d{5}-\d{2}\b',
+            r'\bEQP-\d{5}\b',
+            r'\bPRT-\d{5}-\d{3}-\d{3}\b',
+            r'\bPRT-\d{5}-\d{3}\b',
+            r'\bLBL-\d{5}-\d{3}\b',
+            r'\bOTS-\d{5}-\d{3}\b',
+            r'\bSCH-\d{5}-\d{3}-\d{3}\b',
+            r'\bSW-\d{5}-\d{3}-\d{3}\b',
+            r'\bTFX-\d{5}-\d{3}-\d{3}\b'
+        ]
+
         matches = []
         for page_num in range(pdf_document.page_count):
             page = pdf_document.load_page(page_num)
-            page_text = page.get_text().replace(" ", "")  # Remove spaces from extracted text
-            page_matches = re.findall(pattern, page_text)
-            if page_matches:
-                matches.extend([(match, page_num + 1) for match in page_matches])  # Add page number to each match
+            page_text = page.get_text().replace(" ", "")
+            for pattern in patterns:
+                page_matches = re.findall(pattern, page_text)
+                if page_matches:
+                    matches.extend([(match, pattern, page_num + 1) for match in page_matches])
 
         if matches:
-            # Display matches based on selected mode
             if self.show_page_numbers_radio.isChecked():
-                # Display all matches with page numbers
-                for match, page_num in matches:
+                for match, pattern, page_num in matches:
                     item = f'Match: {match} | Page: {page_num}'
                     self.list_widget.addItem(item)
             else:
-                # Display unique matches without page numbers
-                unique_matches = list(OrderedDict.fromkeys([match for match, _ in matches]))
+                unique_matches = list(OrderedDict.fromkeys([match for match, _, _ in matches]))
                 for match in unique_matches:
                     self.list_widget.addItem(f'Match: {match}')
             self.download_button.setEnabled(True)
         else:
             self.list_widget.addItem('Nothing found')
             self.download_button.setEnabled(False)
+
 
     def toggle_page_numbers(self):
         if self.label.text() != 'No PDF file selected':
@@ -119,6 +131,11 @@ class PDFReader(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    # Get absolute path of the script
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # Construct absolute file path to the image file
+    image_path = os.path.join(script_dir, 'resources', 'galvanize_logo.png')
+    app.setWindowIcon(QIcon(image_path))
     window = PDFReader()
     window.show()
     sys.exit(app.exec_())

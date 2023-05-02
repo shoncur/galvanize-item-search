@@ -231,7 +231,7 @@ class PDFReader(QWidget):
             'PCR',
             'PMSP',
             'PMSR',
-            'PRT'
+            'PRT',
             'PSUR',
             'QPL',
             'RAD',

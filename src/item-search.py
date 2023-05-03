@@ -65,10 +65,10 @@ class PDFReader(QWidget):
 
         # List of regex patterns for various number formats
         patterns = [
-            r'[A-Z0-9]{3}-[A-Z0-9]{5}-[A-Z0-9]{3}',
-            r'[A-Z0-9]{3}-[A-Z0-9]{5}-[A-Z0-9]{2}',
-            r'[A-Z0-9]{3}-[A-Z0-9]{5}(?!-)',
-            r'(?<!-)\d{2}-\d{5}',
+            r'\d{3}-\d{5}-\d{3}',
+            r'\d{3}-\d{5}-\d{2}(?!\d)',
+            r'\d{3}-\d{5}(?!-)',
+            r'(?<!(\d|-))\d{2}-\d{5}',
             r'ECO-\d{2}-\d{5}',
             r'ACM-\d{5}-\d{2}',
             r'ACM-\d{5}(?!-)',
@@ -83,7 +83,7 @@ class PDFReader(QWidget):
             r'CLN-\d{5}-\d{2}',
             r'CLN-\d{5}(?!-)',
             r'DDP-\d{5}',
-            r'DP-\d{4}',
+            r'(?<!\w)DP-\d{4}',
             r'DCD-\d{5}-\d{2}',
             r'DCD-\d{5}(?!-)',
             r'DHF-\d{5}-[A-Z0-9]{2}',

@@ -151,7 +151,8 @@ class PDFReader(QWidget):
                     item = f'Page: {page_num} | {match}'
                     self.list_widget.addItem(item)
             else:
-                unique_matches = list(OrderedDict.fromkeys([match for match, _, _ in matches]))
+                #unique_matches = list(OrderedDict.fromkeys([match for match, _, _ in matches]))
+                unique_matches = sorted(list(set([match for match, _, _ in matches])))
                 for match in unique_matches:
                     self.list_widget.addItem(f'{match}')
             self.download_button.setEnabled(True)

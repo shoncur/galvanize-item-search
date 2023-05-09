@@ -5,7 +5,7 @@ import os
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog, QListWidget, QRadioButton, QMessageBox, QDialog
 from PyQt5.QtGui import QPixmap, QIcon
 from collections import OrderedDict
-from patterns import list_of_patterns
+from patterns import list_of_patterns, supported_item_numbers
 
 class PDFReader(QWidget):
     def __init__(self):
@@ -97,92 +97,6 @@ class PDFReader(QWidget):
         window.setWindowTitle('Supported Item Numbers')
         self.supported_list_widget = QListWidget(self)
 
-        # List all supported item numbers - refer to regex in extract_numbers()
-        # supported_item_numbers = [
-        #     'ACM-XXXXX-XX',
-        #     'ACM-XXXXX',
-        #     'CER-XXXXX-XX',
-        #     'CER-XXXXX',
-        #     'CEP-XXXXX-XX',
-        #     'CEP-XXXXX',
-        #     'CSP-XXXXX-XX',
-        #     'CSP-XXXXX',
-        #     'CSR-XXXXX-XX',
-        #     'CSR-XXXXX',
-        #     'CLN-XXXXX-XX',
-        #     'CLN-XXXXX',
-        #     'DDP-XXXXX',
-        #     'DCD-XXXXX-XX',
-        #     'DCD-XXXXX',
-        #     'DMR-XXXXX-XX',
-        #     'DMR-XXXXX',
-        #     'DHF-XXXXX-XX',
-        #     'DHF-XXXXX',
-        #     'ECO-XX-XXXXX',
-        #     'FAB-XXXXX-XXX-XXX',
-        #     'BRD-XXXXX-XXX-XXX',
-        #     'GTI-XXXXX-XX',
-        #     'EQP-XXXXX',
-        #     'PRT-XXXXX-XXX-XXX',
-        #     'PRT-XXXXX-XXX',
-        #     'LBL-XXXXX-XXX',
-        #     'OTS-XXXXX-XXX',
-        #     'SCH-XXXXX-XXX-XXX',
-        #     'SW-XXXXX-XXX-XXX',
-        #     'TFX-XXXXX-XXX-XXX',
-        #     'XXX-XXXXX-XXX',
-        #     'XXX-XXXXX-XX',
-        #     'XXX-XXXXX',
-        #     'XX-XXXXX',
-        # ]
-        supported_item_numbers = [
-            'ACM',
-            'BRD',
-            'CER',
-            'CEP',
-            'CSP',
-            'CSR',
-            'CLN',
-            'DP',
-            'DDP',
-            'DCD',
-            'DHF',
-            'DMR',
-            'DOT',
-            'EDR',
-            'EQP',
-            'FAB',
-            'FRM',
-            'GTI',
-            'LBL',
-            'LRP',
-            'LRR',
-            'LHR',
-            'MPI',
-            'MKG',
-            'MA',
-            'OTS',
-            'PCP',
-            'PCR',
-            'PMSP',
-            'PMSR',
-            'PRT',
-            'PSUR',
-            'QPL',
-            'RAD',
-            'RSK',
-            'SCH',
-            'SLS',
-            'SW',
-            'SWP',
-            'SOP',
-            'STM',
-            'TFN',
-            'TFX',
-            'TP',
-            'TR',
-            'WRK',
-        ]
         for item in supported_item_numbers:
             item = f'{item}'
             self.supported_list_widget.addItem(item)

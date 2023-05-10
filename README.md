@@ -1,6 +1,5 @@
 # Galvanize Item Search
 ## Author: Shaun Currie
-### Last updated: 2023-04-16
 
 This application is created for use by Galvanize Therapeutics
 

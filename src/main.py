@@ -2,10 +2,66 @@ import sys
 import fitz
 import re
 import os
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog, QListWidget, QRadioButton, QMessageBox, QDialog
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QLineEdit, QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog, QListWidget, QRadioButton, QMessageBox, QDialog
 from PyQt5.QtGui import QPixmap, QIcon
 from collections import OrderedDict
 from patterns import list_of_patterns, supported_item_numbers
+import requests
+from requests.exceptions import HTTPError
+import getpass
+from base import BASE_URL
+
+class LoginPopup(QDialog):
+    def __init__(self):
+        super().__init__()
+
+        # Remove the "What's this?" button
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+
+        self.setWindowTitle("Login")
+        self.email_label = QLabel("Email:", self)
+        self.email_entry = QLineEdit(self)
+        self.password_label = QLabel("Password:", self)
+        self.password_entry = QLineEdit(self)
+        self.password_entry.setEchoMode(QLineEdit.Password)
+        self.login_button = QPushButton("Login", self)
+        self.login_button.clicked.connect(self.login)
+
+        self.error_label = QLabel(self)
+        self.error_label.setStyleSheet("color: red")
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.email_label)
+        layout.addWidget(self.email_entry)
+        layout.addWidget(self.password_label)
+        layout.addWidget(self.password_entry)
+        layout.addWidget(self.login_button)
+        layout.addWidget(self.error_label)
+
+        self.setLayout(layout)
+
+    def login(self):
+        email = self.email_entry.text()
+        password = self.password_entry.text()
+        
+        url = f'{BASE_URL}/login'
+        headers = {'Content-Type':'application/json'}
+
+        try:
+            data = {
+                'email':f'{email}',
+                'password':f'{password}'
+            }
+            response = requests.post(url, headers=headers, json=data)
+            response.raise_for_status()
+            arena_session_id = response.json()['arenaSessionId']
+        except Exception as error:
+            print(f'Invalid entry: {error}')
+            self.error_label.setText(f'Enter a valid email/password')
+            return
+
+        self.accept()
 
 class PDFReader(QWidget):
     def __init__(self):
@@ -146,6 +202,13 @@ if __name__ == '__main__':
     # Construct absolute file path to the image file
     image_path = os.path.join(script_dir, 'resources', 'galvanize_logo.png')
     app.setWindowIcon(QIcon(image_path))
+
+    # Show login popup
+    login_popup = LoginPopup()
+    if login_popup.exec_() != QDialog.Accepted:
+        sys.exit(0)
+
+    # Create main window
     window = PDFReader()
     window.show()
     sys.exit(app.exec_())

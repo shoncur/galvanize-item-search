@@ -82,9 +82,9 @@ class PDFReader(QWidget):
         self.browse_button.clicked.connect(self.browse_pdf)
         self.label = QLabel('No PDF file selected', self)
         self.list_widget = QListWidget(self)
-        self.page_number_label = QLabel('Show page numbers:', self)
+        self.page_number_label = QLabel('Show duplicate items:', self)
         self.show_page_numbers_radio = QRadioButton('Yes', self)
-        self.show_page_numbers_radio.setChecked(True)
+        self.show_page_numbers_radio.setChecked(False)
         self.show_page_numbers_radio.toggled.connect(self.toggle_page_numbers)
         self.supported_numbers_button = QPushButton('Show Supported Item Numbers', self)
         self.supported_numbers_button.clicked.connect(self.supported_numbers_window)
@@ -137,7 +137,6 @@ class PDFReader(QWidget):
                     self.list_widget.addItem(item)
                     print(f"'{match}'")
             else:
-                #unique_matches = list(OrderedDict.fromkeys([match for match, _, _ in matches]))
                 unique_matches = sorted(list(set([match for match, _, _ in matches])))
                 for match in unique_matches:
                     self.list_widget.addItem(f'{match}')

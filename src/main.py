@@ -3,7 +3,7 @@ import fitz
 import re
 import os
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QLineEdit, QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog, QListWidget, QRadioButton, QMessageBox, QDialog
+from PyQt5.QtWidgets import QProgressDialog, QLineEdit, QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog, QListWidget, QRadioButton, QMessageBox, QDialog
 from PyQt5.QtGui import QPixmap, QIcon
 from collections import OrderedDict
 from patterns import list_of_patterns, supported_item_numbers
@@ -11,6 +11,8 @@ import requests
 from requests.exceptions import HTTPError
 import getpass
 from base import BASE_URL
+
+arena_session_id = None
 
 class LoginPopup(QDialog):
     def __init__(self):
@@ -55,6 +57,7 @@ class LoginPopup(QDialog):
             }
             response = requests.post(url, headers=headers, json=data)
             response.raise_for_status()
+            global arena_session_id
             arena_session_id = response.json()['arenaSessionId']
         except Exception as error:
             print(f'Invalid entry: {error}')
@@ -138,9 +141,27 @@ class PDFReader(QWidget):
                     print(f"'{match}'")
             else:
                 unique_matches = sorted(list(set([match for match, _, _ in matches])))
-                for match in unique_matches:
-                    self.list_widget.addItem(f'{match}')
-                    print(f"'{match}'")
+                progress_dialog = QProgressDialog("Loading items...", "Cancel", 0, len(unique_matches), self)
+                progress_dialog.setWindowModality(Qt.WindowModal)
+                progress_dialog.setAutoReset(False)
+                progress_dialog.setAutoClose(False)
+                progress_dialog.setValue(0)
+                for index, match in enumerate(unique_matches):
+                    progress_dialog.setValue(index)
+                    QApplication.processEvents()
+                    try:
+                        item_url = f'{BASE_URL}/items?number={match}'
+                        item_headers = {'arena_session_id':f'{arena_session_id}', 'Content-Type': 'application/json'}
+                        item_response = requests.get(item_url, headers=item_headers)
+                        lifecycle_phase = item_response.json()['results'][0]['lifecyclePhase']['name']
+                        self.list_widget.addItem(f'{match} | {lifecycle_phase}')
+                        print(f"'{match}'")
+                    except Exception as error:
+                        self.list_widget.addItem(f'{match} | {error}')
+                        print('error')
+                    if progress_dialog.wasCanceled():
+                        break
+                progress_dialog.close()
             self.download_button.setEnabled(True)
         else:
             self.list_widget.addItem('Nothing found')

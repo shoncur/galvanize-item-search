@@ -157,8 +157,8 @@ class PDFReader(QWidget):
                         self.list_widget.addItem(f'{match} | {lifecycle_phase}')
                         print(f"'{match}'")
                     except Exception as error:
-                        self.list_widget.addItem(f'{match} | {error}')
-                        print('error')
+                        self.list_widget.addItem(f'{match} | Item not found in Arena')
+                        print(f'{error}')
                     if progress_dialog.wasCanceled():
                         break
                 progress_dialog.close()

@@ -2,9 +2,69 @@ import sys
 import fitz
 import re
 import os
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog, QListWidget, QRadioButton, QMessageBox, QDialog
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QProgressDialog, QLineEdit, QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog, QListWidget, QRadioButton, QMessageBox, QDialog
 from PyQt5.QtGui import QPixmap, QIcon
 from collections import OrderedDict
+from patterns import list_of_patterns, supported_item_numbers
+import requests
+from requests.exceptions import HTTPError
+import getpass
+from base import BASE_URL
+
+arena_session_id = None
+
+class LoginPopup(QDialog):
+    def __init__(self):
+        super().__init__()
+
+        # Remove the "What's this?" button
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+
+        self.setWindowTitle("Login")
+        self.email_label = QLabel("Email:", self)
+        self.email_entry = QLineEdit(self)
+        self.password_label = QLabel("Password:", self)
+        self.password_entry = QLineEdit(self)
+        self.password_entry.setEchoMode(QLineEdit.Password)
+        self.login_button = QPushButton("Login", self)
+        self.login_button.clicked.connect(self.login)
+
+        self.error_label = QLabel(self)
+        self.error_label.setStyleSheet("color: red")
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.email_label)
+        layout.addWidget(self.email_entry)
+        layout.addWidget(self.password_label)
+        layout.addWidget(self.password_entry)
+        layout.addWidget(self.login_button)
+        layout.addWidget(self.error_label)
+
+        self.setLayout(layout)
+
+    def login(self):
+        email = self.email_entry.text()
+        password = self.password_entry.text()
+        
+        url = f'{BASE_URL}/login'
+        headers = {'Content-Type':'application/json'}
+
+        try:
+            data = {
+                'email':f'{email}',
+                'password':f'{password}'
+            }
+            response = requests.post(url, headers=headers, json=data)
+            response.raise_for_status()
+            global arena_session_id
+            arena_session_id = response.json()['arenaSessionId']
+        except Exception as error:
+            print(f'Invalid entry: {error}')
+            self.error_label.setText(f'Enter a valid email/password')
+            return
+
+        self.accept()
 
 class PDFReader(QWidget):
     def __init__(self):
@@ -25,9 +85,9 @@ class PDFReader(QWidget):
         self.browse_button.clicked.connect(self.browse_pdf)
         self.label = QLabel('No PDF file selected', self)
         self.list_widget = QListWidget(self)
-        self.page_number_label = QLabel('Show page numbers:', self)
+        self.page_number_label = QLabel('Show duplicate items:', self)
         self.show_page_numbers_radio = QRadioButton('Yes', self)
-        self.show_page_numbers_radio.setChecked(True)
+        self.show_page_numbers_radio.setChecked(False)
         self.show_page_numbers_radio.toggled.connect(self.toggle_page_numbers)
         self.supported_numbers_button = QPushButton('Show Supported Item Numbers', self)
         self.supported_numbers_button.clicked.connect(self.supported_numbers_window)
@@ -63,84 +123,12 @@ class PDFReader(QWidget):
         # Open PDF and extract text
         pdf_document = fitz.open(file_name)
 
-        # List of regex patterns for various number formats
-        patterns = [
-            r'\d{3}-\d{5}-\d{3}',
-            r'\d{3}-\d{5}-\d{2}(?!\d)',
-            r'\d{3}-\d{5}(?!-)',
-            r'(?<!(\d|-))\d{2}-\d{5}',
-            r'ECO-\d{2}-\d{5}',
-            r'ACM-\d{5}-\d{2}',
-            r'ACM-\d{5}(?!-)',
-            r'CER-\d{5}-\d{2}',
-            r'CER-\d{5}(?!-)',
-            r'CEP-\d{5}-\d{2}',
-            r'CEP-\d{5}(?!-)',
-            r'CSP-\d{5}-\d{2}',
-            r'CSP-\d{5}(?!-)',
-            r'CSR-\d{5}-\d{2}',
-            r'CSR-\d{5}(?!-)',
-            r'CLN-\d{5}-\d{2}',
-            r'CLN-\d{5}(?!-)',
-            r'DDP-\d{5}',
-            r'(?<!\w)DP-\d{4}',
-            r'DCD-\d{5}-\d{2}',
-            r'DCD-\d{5}(?!-)',
-            r'DHF-\d{5}-[A-Z0-9]{2}',
-            r'DHF-\d{5}(?!-)',
-            r'DMR-\d{5}-[A-Z0-9]{2}',
-            r'DMR-\d{5}(?!-)',
-            r'DOT-\d{5}-\d{2}',
-            r'DOT-\d{5}(?!-)',
-            r'EDR-\d{5}(?!-)',
-            r'FRM-\d{5}(?!-)',
-            r'LRP-\d{5}(?!-)',
-            r'LRR-\d{5}(?!-)',
-            r'LHR-\d{5}(?!-)',
-            r'LHR-\d{5}-\d{2}',
-            r'LHR-\d{5}-\d{3}',
-            r'MPI-\d{5}(?!-)',
-            r'MKG-\d{5}(?!-)',
-            r'MKG-\d{5}-\d{2}',
-            r'MA-\d{5}(?!-)',
-            r'PCP-\d{5}-\d{2}',
-            r'PCR-\d{5}(?!-)',
-            r'PMSP-\d{5}(?!-)',
-            r'PMSR-\d{5}(?!-)',
-            r'PSUR-\d{5}(?!-)',
-            r'QPL-\d{5}(?!-)',
-            r'RAD-\d{5}(?!-)',
-            r'RSK-\d{5}(?!-)',
-            r'SLS-\d{5}(?!-)',
-            r'SWP-\d{5}(?!-)',
-            r'SOP-\d{5}(?!-)',
-            r'STM-\d{5}(?!-)',
-            r'TFN-\d{5}(?!-)',
-            r'TFN-\d{5}-\d{2}',
-            r'TP-\d{5}(?!-)',
-            r'TP-\d{5}-\d{2}',
-            r'TR-\d{5}(?!-)',
-            r'TR-\d{5}-\d{2}',
-            r'WRK-\d{5}(?!-)',
-            r'FAB-\d{5}-\d{3}-\d{3}',
-            r'BRD-\d{5}-\d{3}-\d{3}',
-            r'GTI-\d{5}-\d{2}',
-            r'EQP-\d{5}',
-            r'PRT-\d{5}-\d{3}-\d{3}',
-            r'PRT-\d{5}-\d{3}',
-            r'LBL-\d{5}-\d{3}',
-            r'OTS-\d{5}-\d{3}',
-            r'SCH-\d{5}-\d{3}-\d{3}',
-            r'SW-\d{5}-\d{3}-\d{3}',
-            r'TFX-\d{5}-\d{3}-\d{3}'
-        ]
-
         matches = []
         for page_num in range(pdf_document.page_count):
             page = pdf_document.load_page(page_num)
             page_text = page.get_text().replace(" ", "").replace("\n", "")
             print(page_text)
-            for pattern in patterns:
+            for pattern in list_of_patterns:
                 page_matches = re.findall(pattern, page_text)
                 if page_matches:
                     matches.extend([(match, pattern, page_num + 1) for match in page_matches])
@@ -150,11 +138,30 @@ class PDFReader(QWidget):
                 for match, pattern, page_num in matches:
                     item = f'Page: {page_num} | {match}'
                     self.list_widget.addItem(item)
+                    print(f"'{match}'")
             else:
-                #unique_matches = list(OrderedDict.fromkeys([match for match, _, _ in matches]))
                 unique_matches = sorted(list(set([match for match, _, _ in matches])))
-                for match in unique_matches:
-                    self.list_widget.addItem(f'{match}')
+                progress_dialog = QProgressDialog("Loading items...", "Cancel", 0, len(unique_matches), self)
+                progress_dialog.setWindowModality(Qt.WindowModal)
+                progress_dialog.setAutoReset(False)
+                progress_dialog.setAutoClose(False)
+                progress_dialog.setValue(0)
+                for index, match in enumerate(unique_matches):
+                    progress_dialog.setValue(index)
+                    QApplication.processEvents()
+                    try:
+                        item_url = f'{BASE_URL}/items?number={match}'
+                        item_headers = {'arena_session_id':f'{arena_session_id}', 'Content-Type': 'application/json'}
+                        item_response = requests.get(item_url, headers=item_headers)
+                        lifecycle_phase = item_response.json()['results'][0]['lifecyclePhase']['name']
+                        self.list_widget.addItem(f'{match} | {lifecycle_phase}')
+                        print(f"'{match}'")
+                    except Exception as error:
+                        self.list_widget.addItem(f'{match} | Item not found in Arena')
+                        print(f'{error}')
+                    if progress_dialog.wasCanceled():
+                        break
+                progress_dialog.close()
             self.download_button.setEnabled(True)
         else:
             self.list_widget.addItem('Nothing found')
@@ -166,92 +173,6 @@ class PDFReader(QWidget):
         window.setWindowTitle('Supported Item Numbers')
         self.supported_list_widget = QListWidget(self)
 
-        # List all supported item numbers - refer to regex in extract_numbers()
-        # supported_item_numbers = [
-        #     'ACM-XXXXX-XX',
-        #     'ACM-XXXXX',
-        #     'CER-XXXXX-XX',
-        #     'CER-XXXXX',
-        #     'CEP-XXXXX-XX',
-        #     'CEP-XXXXX',
-        #     'CSP-XXXXX-XX',
-        #     'CSP-XXXXX',
-        #     'CSR-XXXXX-XX',
-        #     'CSR-XXXXX',
-        #     'CLN-XXXXX-XX',
-        #     'CLN-XXXXX',
-        #     'DDP-XXXXX',
-        #     'DCD-XXXXX-XX',
-        #     'DCD-XXXXX',
-        #     'DMR-XXXXX-XX',
-        #     'DMR-XXXXX',
-        #     'DHF-XXXXX-XX',
-        #     'DHF-XXXXX',
-        #     'ECO-XX-XXXXX',
-        #     'FAB-XXXXX-XXX-XXX',
-        #     'BRD-XXXXX-XXX-XXX',
-        #     'GTI-XXXXX-XX',
-        #     'EQP-XXXXX',
-        #     'PRT-XXXXX-XXX-XXX',
-        #     'PRT-XXXXX-XXX',
-        #     'LBL-XXXXX-XXX',
-        #     'OTS-XXXXX-XXX',
-        #     'SCH-XXXXX-XXX-XXX',
-        #     'SW-XXXXX-XXX-XXX',
-        #     'TFX-XXXXX-XXX-XXX',
-        #     'XXX-XXXXX-XXX',
-        #     'XXX-XXXXX-XX',
-        #     'XXX-XXXXX',
-        #     'XX-XXXXX',
-        # ]
-        supported_item_numbers = [
-            'ACM',
-            'BRD',
-            'CER',
-            'CEP',
-            'CSP',
-            'CSR',
-            'CLN',
-            'DP',
-            'DDP',
-            'DCD',
-            'DHF',
-            'DMR',
-            'DOT',
-            'EDR',
-            'EQP',
-            'FAB',
-            'FRM',
-            'GTI',
-            'LBL',
-            'LRP',
-            'LRR',
-            'LHR',
-            'MPI',
-            'MKG',
-            'MA',
-            'OTS',
-            'PCP',
-            'PCR',
-            'PMSP',
-            'PMSR',
-            'PRT',
-            'PSUR',
-            'QPL',
-            'RAD',
-            'RSK',
-            'SCH',
-            'SLS',
-            'SW',
-            'SWP',
-            'SOP',
-            'STM',
-            'TFN',
-            'TFX',
-            'TP',
-            'TR',
-            'WRK',
-        ]
         for item in supported_item_numbers:
             item = f'{item}'
             self.supported_list_widget.addItem(item)
@@ -301,6 +222,13 @@ if __name__ == '__main__':
     # Construct absolute file path to the image file
     image_path = os.path.join(script_dir, 'resources', 'galvanize_logo.png')
     app.setWindowIcon(QIcon(image_path))
+
+    # Show login popup
+    login_popup = LoginPopup()
+    if login_popup.exec_() != QDialog.Accepted:
+        sys.exit(0)
+
+    # Create main window
     window = PDFReader()
     window.show()
     sys.exit(app.exec_())

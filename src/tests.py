@@ -1,6 +1,9 @@
 import requests
 from login import arena_session_id
 from base import BASE_URL
+from login import arena_session_id
+
+rev_dict = {chr(65 + i): i + 1 for i in range(26)}
 
 matches = [
     '020-00156-000',

@@ -13,6 +13,7 @@ import getpass
 from base import BASE_URL
 
 arena_session_id = None
+rev_dict = {chr(65 + i): i + 1 for i in range(26)}
 
 class LoginPopup(QDialog):
     def __init__(self):
@@ -149,16 +150,34 @@ class PDFReader(QWidget):
                 for index, match in enumerate(unique_matches):
                     progress_dialog.setValue(index)
                     QApplication.processEvents()
-                    try:
+                    try: # Get the item from the items world in Arena
                         item_url = f'{BASE_URL}/items?number={match}'
-                        item_headers = {'arena_session_id':f'{arena_session_id}', 'Content-Type': 'application/json'}
+                        item_headers = {'arena_session_id':f'{arena_session_id}', 'Content-Type':'application/json'}
                         item_response = requests.get(item_url, headers=item_headers)
-                        lifecycle_phase = item_response.json()['results'][0]['lifecyclePhase']['name']
-                        self.list_widget.addItem(f'{match} | {lifecycle_phase}')
+                        item_lifecycle_phase = item_response.json()['results'][0]['lifecyclePhase']['name']
+                        item_revision = item_response.json()['results'][0]['revisionNumber']
+                        self.list_widget.addItem(f'{match} | {item_lifecycle_phase} | Rev {item_revision}')
                         print(f"'{match}'")
-                    except Exception as error:
-                        self.list_widget.addItem(f'{match} | Item not found in Arena')
-                        print(f'{error}')
+                    except Exception as error: 
+                        try: # Try to get the item from the supplieritems world
+                            supplier_item_url = f'{BASE_URL}/supplieritems?number={match}'
+                            supplier_item_response = requests.get(supplier_item_url, headers=item_headers)
+                            supplier_item_guid = supplier_item_response.json()['results'][0]['guid']
+                            supplier_item_sourcing_url = f'{BASE_URL}/supplieritems/{supplier_item_guid}/sourcing'
+                            supplier_item_sourcing_response = requests.get(supplier_item_sourcing_url, headers=item_headers)
+                            try:
+                                linked_item = supplier_item_sourcing_response.json()['results'][0]['item']['number']
+                                linked_item_url = f'{BASE_URL}/items?number={linked_item}'
+                                linked_item_response = requests.get(linked_item_url, headers=item_headers)
+                                linked_item_revision = linked_item_response.json()['results'][0]['revisionNumber']
+                                linked_item_lifecycle_phase = linked_item_response.json()['results'][0]['lifecyclePhase']['name']
+                                self.list_widget.addItem(f'{match} = {linked_item} | {linked_item_lifecycle_phase} | Rev {linked_item_revision}')
+                            except:
+                                self.list_widget.addItem(f'{match} | Something went wrong')
+                                print(f'{error}')
+                        except:
+                            self.list_widget.addItem(f'{match} | Item not found in Arena')
+                            print(f'{error}')
                     if progress_dialog.wasCanceled():
                         break
                 progress_dialog.close()

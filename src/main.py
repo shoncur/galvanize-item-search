@@ -9,7 +9,6 @@ from collections import OrderedDict
 from patterns import list_of_patterns, supported_item_numbers
 import requests
 from requests.exceptions import HTTPError
-import getpass
 from base import BASE_URL
 
 arena_session_id = None

@@ -64,6 +64,7 @@ list_of_patterns = [
     r'PRT-\d{5}-\d{3}-\d{3}',
     r'PRT-\d{5}-\d{3}',
     r'LBL-\d{5}-\d{3}',
+    r'LBL-\d{5}(?!-)',
     r'OTS-\d{5}-\d{3}',
     r'SCH-\d{5}-\d{3}-\d{3}',
     r'SW-\d{5}-\d{3}-\d{3}',

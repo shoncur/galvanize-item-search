@@ -2,6 +2,7 @@ import sys
 import fitz
 import re
 import os
+import csv
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QProgressDialog, QLineEdit, QApplication, QWidget, QVBoxLayout, QPushButton, QLabel, QFileDialog, QListWidget, QRadioButton, QMessageBox, QDialog
 from PyQt5.QtGui import QPixmap, QIcon
@@ -215,23 +216,38 @@ class PDFReader(QWidget):
             QMessageBox.warning(self, 'Error', 'No matches found to download.', QMessageBox.Ok)
             return
 
-        file_name, _ = QFileDialog.getSaveFileName(self, 'Save Matches', '', 'Text Files (*.txt)')
+        file_name, _ = QFileDialog.getSaveFileName(self, 'Save Matches', '', 'CSV Files (*.csv);;Text Files (*.txt)')
         if file_name:
-            with open(file_name, 'w') as file:
-                if self.show_page_numbers_radio.isChecked():
-                    # Write all matches with page numbers
-                    for i in range(self.list_widget.count()):
-                        item = self.list_widget.item(i).text()
-                        file.write(f'{item}\n')
-                else:
-                    # Write unique matches without page numbers
-                    unique_matches = list(OrderedDict.fromkeys([self.list_widget.item(i).text() for i in range(self.list_widget.count())]))
-                    for item in unique_matches:
-                        file.write(f'{item}\n')
+            if file_name.lower().endswith('.csv'):
+                with open(file_name, 'w', newline='') as file:
+                    writer = csv.writer(file)
+                    if self.show_page_numbers_radio.isChecked():
+                        # Write all matches with page numbers
+                        for i in range(self.list_widget.count()):
+                            item = self.list_widget.item(i).text()
+                            writer.writerow(item.split('|'))  # Split into cells if "|" is present
+                    else:
+                        # Write unique matches without page numbers
+                        unique_matches = list(OrderedDict.fromkeys([self.list_widget.item(i).text() for i in range(self.list_widget.count())]))
+                        for item in unique_matches:
+                            writer.writerow(item.split('|'))  # Split into cells if "|" is present
+            else:
+                with open(file_name, 'w') as file:
+                    if self.show_page_numbers_radio.isChecked():
+                        # Write all matches with page numbers
+                        for i in range(self.list_widget.count()):
+                            item = self.list_widget.item(i).text()
+                            file.write(f'{item}\n')
+                    else:
+                        # Write unique matches without page numbers
+                        unique_matches = list(OrderedDict.fromkeys([self.list_widget.item(i).text() for i in range(self.list_widget.count())]))
+                        for item in unique_matches:
+                            file.write(f'{item}\n')
 
             QMessageBox.information(self, 'Success', f'Matches have been downloaded to: {file_name}', QMessageBox.Ok)
         else:
             QMessageBox.warning(self, 'Error', 'File name not provided.', QMessageBox.Ok)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

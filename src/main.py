@@ -221,6 +221,8 @@ class PDFReader(QWidget):
             if file_name.lower().endswith('.csv'):
                 with open(file_name, 'w', newline='') as file:
                     writer = csv.writer(file)
+                    header = ['Part Number', 'Revision', 'Lifecycle Status']
+                    writer.writerow(header)
                     if self.show_page_numbers_radio.isChecked():
                         # Write all matches with page numbers
                         for i in range(self.list_widget.count()):

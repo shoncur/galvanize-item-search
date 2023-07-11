@@ -221,13 +221,14 @@ class PDFReader(QWidget):
             if file_name.lower().endswith('.csv'):
                 with open(file_name, 'w', newline='') as file:
                     writer = csv.writer(file)
-                    header = ['Part Number', 'Revision', 'Lifecycle Status']
+                    header = ['Part Number', 'Lifecycle Status', 'Revision']
                     writer.writerow(header)
                     if self.show_page_numbers_radio.isChecked():
                         # Write all matches with page numbers
                         for i in range(self.list_widget.count()):
                             item = self.list_widget.item(i).text()
-                            writer.writerow(item.split('|'))  # Split into cells if "|" is present
+                            writer.writerow(item.split('|'))
+                            # writer.writerow(re.split(r'\||=', item))  # Split into cells if "|" or "=" is present
                     else:
                         # Write unique matches without page numbers
                         unique_matches = list(OrderedDict.fromkeys([self.list_widget.item(i).text() for i in range(self.list_widget.count())]))

@@ -156,7 +156,7 @@ class PDFReader(QWidget):
                         item_response = requests.get(item_url, headers=item_headers)
                         item_lifecycle_phase = item_response.json()['results'][0]['lifecyclePhase']['name']
                         item_revision = item_response.json()['results'][0]['revisionNumber']
-                        self.list_widget.addItem(f'{match} | {item_lifecycle_phase} | Rev {item_revision}')
+                        self.list_widget.addItem(f'{match} || {item_lifecycle_phase} | Rev {item_revision}')
                         print(f"'{match}'")
                     except Exception as error: 
                         try: # Try to get the item from the supplieritems world
@@ -171,7 +171,7 @@ class PDFReader(QWidget):
                                 linked_item_response = requests.get(linked_item_url, headers=item_headers)
                                 linked_item_revision = linked_item_response.json()['results'][0]['revisionNumber']
                                 linked_item_lifecycle_phase = linked_item_response.json()['results'][0]['lifecyclePhase']['name']
-                                self.list_widget.addItem(f'{match} = {linked_item} | {linked_item_lifecycle_phase} | Rev {linked_item_revision}')
+                                self.list_widget.addItem(f'{match} | {linked_item} | {linked_item_lifecycle_phase} | Rev {linked_item_revision}')
                             except:
                                 self.list_widget.addItem(f'{match} | Something went wrong')
                                 print(f'{error}')
@@ -221,7 +221,7 @@ class PDFReader(QWidget):
             if file_name.lower().endswith('.csv'):
                 with open(file_name, 'w', newline='') as file:
                     writer = csv.writer(file)
-                    header = ['Part Number', 'Lifecycle Status', 'Revision']
+                    header = ['Part Number', 'Galvanize Equivalent', 'Lifecycle Status', 'Revision']
                     writer.writerow(header)
                     if self.show_page_numbers_radio.isChecked():
                         # Write all matches with page numbers

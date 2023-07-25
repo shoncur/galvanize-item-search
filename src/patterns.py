@@ -47,6 +47,7 @@ list_of_patterns = [
     r'QPL-\d{5}(?!-)',
     r'RAD-\d{5}(?!-)',
     r'RSK-\d{5}(?!-)',
+    r'RSK-\d{5}-\d{3}',
     r'SLS-\d{5}(?!-)',
     r'SWP-\d{5}(?!-)',
     r'SOP-\d{5}(?!-)',

@@ -77,7 +77,8 @@ list_of_patterns = [
     r'SW-\d{5}-\d{3}-\d{3}',
     r'SW-\d{5}-\d{3}(?!-)',
     r'SW-\d{5}(?!-)',
-    r'TFX-\d{5}-\d{3}-\d{3}'
+    r'TFX-\d{5}-\d{3}-\d{3}',
+    r'\d{2}-\d{3}-\d{3}',
 ]
 
 # List all supported item numbers

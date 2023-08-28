@@ -173,7 +173,7 @@ class PDFReader(QWidget):
                                 linked_item_lifecycle_phase = linked_item_response.json()['results'][0]['lifecyclePhase']['name']
                                 self.list_widget.addItem(f'{match} | {linked_item} | {linked_item_lifecycle_phase} | Rev {linked_item_revision}')
                             except:
-                                self.list_widget.addItem(f'{match} | Something went wrong')
+                                self.list_widget.addItem(f'{match} | Something went wrong, please check item # in Arena to verify the issue')
                                 print(f'{error}')
                         except:
                             self.list_widget.addItem(f'{match} | Item not found in Arena')

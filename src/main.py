@@ -127,7 +127,7 @@ class PDFReader(QWidget):
         matches = []
         for page_num in range(pdf_document.page_count):
             page = pdf_document.load_page(page_num)
-            page_text = page.get_text().replace(" ", "").replace("\n", "")
+            page_text = page.get_text()#.replace(" ", "").replace("\n", "")  no longer getting rid of spaces to fix table reading
             print(page_text)
             for pattern in list_of_patterns:
                 page_matches = re.findall(pattern, page_text)

@@ -78,8 +78,6 @@ class PDFReader(QWidget):
         self.setWindowTitle('Galvanize Item Search')
         # Get absolute path of the script
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        # Construct absolute file path to the image file
-        self.setWindowIcon(QIcon(image_path))
 
         # Create widgets
         self.browse_button = QPushButton('Browse', self)

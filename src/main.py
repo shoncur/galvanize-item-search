@@ -11,6 +11,7 @@ from patterns import list_of_patterns, supported_item_numbers
 import requests
 from requests.exceptions import HTTPError
 from base import BASE_URL
+from get_path import get_resource_path
 
 arena_session_id = None
 rev_dict = {chr(65 + i): i + 1 for i in range(26)}
@@ -78,7 +79,6 @@ class PDFReader(QWidget):
         # Get absolute path of the script
         script_dir = os.path.dirname(os.path.abspath(__file__))
         # Construct absolute file path to the image file
-        image_path = os.path.join(script_dir, 'resources', 'galvanize_logo.png')
         self.setWindowIcon(QIcon(image_path))
 
         # Create widgets
@@ -257,8 +257,8 @@ if __name__ == '__main__':
     # Get absolute path of the script
     script_dir = os.path.dirname(os.path.abspath(__file__))
     # Construct absolute file path to the image file
-    image_path = os.path.join(script_dir, 'resources', 'galvanize_logo.png')
-    app.setWindowIcon(QIcon(image_path))
+    logo_path = get_resource_path("resources/galvanize_logo.png")
+    app.setWindowIcon(QIcon(logo_path))
 
     # Show login popup
     login_popup = LoginPopup()

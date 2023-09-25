@@ -206,8 +206,8 @@ class PDFReader(QWidget):
     def toggle_page_numbers(self):
         if self.label.text() != 'No PDF file selected':
             self.extract_numbers(self.label.text().split(': ')[1])  # Re-extract and display matches based on new mode
-        else:
-            QMessageBox.warning(self, 'Error', 'Please select a PDF file first.', QMessageBox.Ok)
+        # else:
+        #     QMessageBox.warning(self, 'Error', 'Please select a PDF file first.', QMessageBox.Ok)     No need to currently display this error
 
     def download_matches(self):
         if self.list_widget.count() == 0:
@@ -257,7 +257,7 @@ if __name__ == '__main__':
     # Construct absolute file path to the image file
     logo_path = get_resource_path("resources/galvanize_logo.png")
     app.setWindowIcon(QIcon(logo_path))
-
+ 
     # Show login popup
     login_popup = LoginPopup()
     if login_popup.exec_() != QDialog.Accepted:

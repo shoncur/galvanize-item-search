@@ -66,7 +66,7 @@ list_of_patterns = [
     r'GTI-\d{5}-\d{2}',
     r'EQP-\d{5}',
     r'PRT-\d{5}-\d{3}-\d{3}',
-    r'PRT-\d{5}-\d{2}',
+    r'PRT-\d{5}-\d{2}(?!\d)',
     r'PRT-\d{5}-\d{3}(?!-)',
     r'PRT-\d{5}(?!-)',
     r'LBL-\d{5}-\d{3}',

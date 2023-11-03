@@ -40,6 +40,7 @@ list_of_patterns = [
     r'MKG-\d{5}(?!-)',
     r'MKG-\d{5}-\d{2}',
     r'MA-\d{5}(?!-)',
+    r'PCP-\d{5}(?!-)',
     r'PCP-\d{5}-\d{2}',
     r'PCR-\d{5}(?!-)',
     r'PMSP-\d{5}(?!-)',

@@ -128,9 +128,10 @@ class PDFReader(QWidget):
             page_text = page.get_text()#.replace(" ", "").replace("\n", "")  no longer getting rid of spaces to fix table reading
             print(page_text)
             for pattern in list_of_patterns:
-                page_matches = re.findall(pattern, page_text)
+                page_matches = re.findall(pattern, page_text, re.DOTALL)
                 if page_matches:
-                    matches.extend([(match, pattern, page_num + 1) for match in page_matches])
+                    cleaned_matches = [re.sub(r'\s', '', match) for match in page_matches]
+                    matches.extend([(match, pattern, page_num + 1) for match in cleaned_matches])
 
         if matches:
             if self.show_page_numbers_radio.isChecked():

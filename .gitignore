@@ -131,4 +131,4 @@ dmypy.json
 .pyre/
 
 # Ignore the commands file with no extension
-pyinstaller_command
+pyinstaller_command.txt

@@ -1,2 +1,0 @@
-cd C:\FIDO\galvanize-item-search\src
-pyinstaller --noconsole --onefile --name FIDOv(version) --add-data "resources;resources" --icon resources\galvanize_icon.ico main.py

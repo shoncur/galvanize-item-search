@@ -75,7 +75,7 @@ class PDFReader(QWidget):
         self.init_ui()
 
     def init_ui(self):
-        self.setWindowTitle('Galvanize Item Search')
+        self.setWindowTitle('FIDO')
         # Get absolute path of the script
         script_dir = os.path.dirname(os.path.abspath(__file__))
 
